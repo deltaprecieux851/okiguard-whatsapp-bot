@@ -1,5 +1,5 @@
-const { makeWASocket, useSingleFileAuthState, fetchLatestBaileysVersion, makeInMemoryStore, jidNormalizedUser, DisconnectReason } = require('@adiwajshing/baileys')
-const { state, saveState } = useSingleFileAuthState('./sessions/auth_info.json')
+const { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, makeInMemoryStore, jidNormalizedUser, DisconnectReason } = require('@adiwajshing/baileys')
+const { state, saveState } = useMultiFileAuthState('./sessions/auth_info.json')
 const P = require('pino')
 const qrcode = require('qrcode')
 const qrcodeTerminal = require('qrcode-terminal')
