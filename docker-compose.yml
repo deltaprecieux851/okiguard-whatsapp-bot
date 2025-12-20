@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  bot:
+    build: .
+    container_name: okiguard-bot
+    restart: unless-stopped
+    volumes:
+      - ./sessions:/app/sessions
+      - ./tmp:/app/tmp
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+  redis:
+    image: redis:7-alpine
+    container_name: okiguard-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'

@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OkiGuard - Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold text-amber-400">OkiGuard — Admin</h1>
+      <div id="qrIndicator" class="text-sm text-amber-200">Chargement QR…</div>
+    </header>
+    <div class="grid grid-cols-4 gap-6">
+      <aside class="col-span-1 bg-slate-800 p-4 rounded-md shadow">
+        <h2 class="font-medium mb-2">Navigation</h2>
+        <nav class="space-y-2">
+          <button class="w-full text-left text-sm py-2 px-3 rounded hover:bg-slate-700" onclick="showPanel('status')">État</button>
+          <button class="w-full text-left text-sm py-2 px-3 rounded hover:bg-slate-700" onclick="showPanel('qr')">QR</button>
+          <button class="w-full text-left text-sm py-2 px-3 rounded hover:bg-slate-700" onclick="showPanel('commands')">Commandes</button>
+          <button class="w-full text-left text-sm py-2 px-3 rounded hover:bg-slate-700" onclick="showPanel('owners')">Owners</button>
+        </nav>
+      </aside>
+      <main class="col-span-3 space-y-4">
+        <section id="panel-status" class="panel bg-slate-800 p-4 rounded-md">
+          <h3 class="font-semibold">État</h3>
+          <pre id="status" class="mt-2 text-sm bg-slate-900 p-3 rounded">Chargement…</pre>
+        </section>
+
+        <section id="panel-qr" class="panel hidden bg-slate-800 p-4 rounded-md">
+          <h3 class="font-semibold">Connexion — QR Code</h3>
+          <p class="text-sm text-slate-400 mt-1">Scannez ce QR avec votre téléphone (WhatsApp → Menu → Appareils liés → Scanner le code).</p>
+          <div class="mt-3 flex items-start gap-4">
+            <img id="qrImg" src="/qr.png" alt="QR code (pas encore généré)" class="w-56 h-56 bg-white p-2 rounded" />
+            <div class="flex flex-col gap-2">
+              <button class="px-3 py-2 bg-amber-400 text-slate-900 rounded" onclick="refreshQR()">Rafraîchir le QR</button>
+              <button class="px-3 py-2 bg-slate-700 text-slate-100 rounded" onclick="downloadQR()">Télécharger</button>
+              <div id="qrNote" class="text-sm text-slate-400 mt-2">Si le QR n'est pas visible, lancez le bot et vérifiez les logs (qr.png sera généré).</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-commands" class="panel hidden bg-slate-800 p-4 rounded-md">
+          <h3 class="font-semibold">Commandes</h3>
+          <div id="commandsTree" class="mt-3 space-y-2 text-sm"></div>
+        </section>
+
+        <section id="panel-owners" class="panel hidden bg-slate-800 p-4 rounded-md">
+          <h3 class="font-semibold">Owners & Admin</h3>
+          <div id="owners">Chargement…</div>
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <input id="ownerNum" class="p-2 bg-slate-900 rounded" placeholder="Numéro (+243...)" />
+            <div class="space-x-2">
+              <button class="px-3 py-2 bg-emerald-500 rounded" onclick="addOwner()">Ajouter</button>
+              <button class="px-3 py-2 bg-red-600 rounded" onclick="removeOwner()">Retirer</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-misc" class="panel hidden bg-slate-800 p-4 rounded-md">
+          <h3 class="font-semibold">Gestion</h3>
+          <div class="mt-3 grid grid-cols-2 gap-3">
+            <button class="px-3 py-2 bg-slate-700 rounded" onclick="clearTmp()">Nettoyer tmp</button>
+            <div>
+              <input id="botName" class="p-2 bg-slate-900 rounded" placeholder="Nom du bot" />
+              <button class="px-3 py-2 bg-amber-400 rounded mt-2" onclick="setBotName()">Appliquer</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Admin Token</h2>
+    <input id="adminToken" placeholder="Token (stocké en local)" />
+    <button onclick="saveToken()">Sauvegarder token</button>
+  </div>
+  <div class="card">
+    <h2>Owners</h2>
+    <div id="owners">Chargement…</div>
+    <label>Numéro (+243...) <input id="ownerNum" /></label>
+    <button onclick="addOwner()">Ajouter owner</button>
+    <button onclick="removeOwner()">Retirer owner</button>
+  </div>
+  <div class="card">
+    <h2>Sessions</h2>
+    <div id="sessions">Chargement…</div>
+    <button onclick="refreshSessions()">Rafraîchir</button>
+  </div>
+  <div class="card">
+    <h2>Gestion</h2>
+    <button onclick="clearTmp()">Nettoyer tmp</button>
+    <label>Nom du bot <input id="botName" /></label>
+    <button onclick="setBotName()">Appliquer nom</button>
+  </div>
+  <div class="card">
+    <h2>Upload image de commande</h2>
+    <label>Commande <input id="cmdName" /></label>
+    <input type="file" id="cmdImage" />
+    <button onclick="uploadCmdImage()">Uploader</button>
+  </div>
+  <script>
+    function getHeaders(){ return { 'x-admin-token': localStorage.getItem('adminToken') || '' } }
+    async function fetchJson(url, opts){ try{ opts = opts || {}; opts.headers = Object.assign(opts.headers || {}, getHeaders()); const r = await fetch(url, opts); return r.ok ? r.json() : null } catch(e){ return null } }
+    async function saveToken(){ localStorage.setItem('adminToken', document.getElementById('adminToken').value); alert('Token saved locally') }
+    function showPanel(id){ document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden')); const el = document.getElementById('panel-'+id); if(el) el.classList.remove('hidden') }
+    async function refresh(){
+      const s = await fetchJson('/admin/status'); document.getElementById('status').innerText = s ? JSON.stringify(s, null, 2) : 'Erreur'
+      const o = await fetchJson('/admin/owners'); document.getElementById('owners').innerText = o ? JSON.stringify(o) : 'Erreur'
+      refreshSessions(); refreshCommands(); refreshQRStatus()
+    }
+    async function addOwner(){ const num = document.getElementById('ownerNum').value; await fetchJson('/admin/owners/add', { method:'POST', body: JSON.stringify({ number: num }), headers:{ 'Content-Type': 'application/json' } }); refresh() }
+    async function removeOwner(){ const num = document.getElementById('ownerNum').value; await fetchJson('/admin/owners/remove', { method:'POST', body: JSON.stringify({ number: num }), headers:{ 'Content-Type': 'application/json' } }); refresh() }
+    async function refreshSessions(){ const s = await fetchJson('/admin/sessions'); /* sessions not shown in new layout */ }
+    async function clearTmp(){ await fetchJson('/admin/cleartmp', { method: 'POST' }); alert('tmp nettoyé'); }
+    async function setBotName(){ const n = document.getElementById('botName').value; await fetchJson('/admin/set-bot-name', { method:'POST', body: JSON.stringify({ name: n }), headers:{ 'Content-Type': 'application/json' } }); alert('name mise à jour'); refresh() }
+    async function refreshCommands(){ const res = await fetchJson('/admin/commands'); const container = document.getElementById('commandsTree'); container.innerHTML = '';
+      if (!res || !res.commands) { container.innerText = 'Aucune commande trouvée' ; return }
+      for (const [cat, cmds] of Object.entries(res.commands)) {
+        const catEl = document.createElement('div');
+        const head = document.createElement('button'); head.className = 'w-full text-left p-2 bg-slate-700 rounded flex justify-between items-center'; head.innerHTML = `<span>${cat} (${cmds.length})</span><span>+</span>`;
+        const list = document.createElement('div'); list.className = 'mt-2 hidden p-2 space-y-2';
+        head.addEventListener('click', ()=>{ list.classList.toggle('hidden'); head.querySelector('span:last-child').textContent = list.classList.contains('hidden') ? '+' : '-'; });
+        for (const c of cmds) {
+          const item = document.createElement('div'); item.className = 'p-2 bg-slate-900 rounded flex justify-between items-start';
+          item.innerHTML = `<div><div class="font-medium">${c.name}</div><div class="text-slate-400 text-sm">${c.description}</div><div class="text-slate-500 text-xs mt-1">${c.usage || ''}</div></div><div><button class='px-2 py-1 bg-slate-700 rounded' onclick='copyUsage("${c.usage || ''}")'>Copier</button></div>`
+          list.appendChild(item)
+        }
+        catEl.appendChild(head); catEl.appendChild(list); container.appendChild(catEl)
+      }
+    }
+    function copyUsage(text){ navigator.clipboard.writeText(text || '') .then(()=> alert('Usage copié')) }
+    // QR helpers
+    function refreshQR(){ const img = document.getElementById('qrImg'); if(!img) return; img.src = '/qr.png?t=' + Date.now(); }
+    function downloadQR(){ const a = document.createElement('a'); a.href = '/qr.png?t=' + Date.now(); a.download = 'qr.png'; document.body.appendChild(a); a.click(); a.remove(); }
+    async function refreshQRStatus(){ const s = await fetchJson('/admin/qr-status'); const el = document.getElementById('qrIndicator'); if(!s) { el.innerText = 'QR: indisponible' ; el.className='text-sm text-rose-400' ; return } el.innerText = s.connected ? 'Connecté' : (s.qr ? 'QR prêt' : 'QR absent'); el.className = s.connected ? 'text-sm text-emerald-400' : 'text-sm text-amber-300'
+      if(s.qr) refreshQR()
+    }
+    showPanel('status'); refresh(); setInterval(refreshQRStatus, 5000); setInterval(refresh, 20000);
+  </script>
+</body>
+</html>

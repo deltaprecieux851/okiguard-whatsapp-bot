@@ -1,0 +1,15 @@
+{
+  "referrals": {},
+  "pairs": {},
+  "banned": [],
+  "warns": {},
+  "groupSettings": {},
+  "owners": [
+    "243982730192@s.whatsapp.net",
+    "243894697490@s.whatsapp.net",
+    "243855147270@s.whatsapp.net"
+  ],
+  "bot": { "name": "OkiGuard", "mode": "public", "autostatus": false, "autoreact": false },
+  "security": { "adminPath": "/admin", "adminToken": "" }
+}
+}

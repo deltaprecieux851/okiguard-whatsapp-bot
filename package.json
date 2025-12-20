@@ -1,0 +1,31 @@
+{
+  "name": "okiguard-whatsapp-bot",
+  "version": "0.2.0",
+  "description": "OkiGuard — WhatsApp bot prototype (Baileys) - QR auth + commandes modulaires",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/precieux0/okiguard-whatsapp-bot"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "check": "node scripts/check_env.js",
+    "generate-commands": "node scripts/generate_commands.js",
+    "test": "jest --runInBand",
+    "lint": "echo 'no lint configured'",
+    "prepare-dist": "node scripts/prepare_dist.js"
+  },
+  "author": "PRECIEUX OKITAKOY",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "dependencies": {
+    "multer": "^1.4.5",
+    "@adiwajshing/baileys": "^5.0.0",
+    "qrcode-terminal": "^0.12.0",
+    "qrcode": "^1.5.1",
+    "express": "^4.18.2",
+    "pino": "^8.0.0"
+  }
+}

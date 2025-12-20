@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: okiguard-bot
+    env: docker
+    plan: starter
+    dockerfilePath: Dockerfile
+    buildCommand: npm ci && npm run prepare-dist
+    startCommand: npm start
+    disk:
+      - mountPath: /app/sessions
+        sizeGb: 1
+    healthCheckPath: /health
+    instanceType: starter
+    autoDeploy: true
+    routes:
+      - type: http
+        path: /
+    envVars:
+      - key: ADMIN_TOKEN
+        value: ""
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: REDIS_URL
+        value: ""
+      - key: TWILIO_SID
+        value: ""
+      - key: TWILIO_TOKEN
+        value: ""
+      - key: TWILIO_FROM
+        value: ""
+      - key: PAIRING_METHOD
+        value: "manual" # options: manual | sms
+
+# Important notes:
+# - **Sécurité:** Ne mettez PAS vos secrets (ADMIN_TOKEN, TWILIO_*, REDIS_URL) dans ce fichier pour un repo public.
+#   Utilisez le dashboard Render pour définir les variables d'environnement en tant que secrets.
+# - Le champ `buildCommand` exécute `npm ci` et prépare le bundle (prepare-dist) avant le démarrage.
+# - `autoDeploy: true` permet de lancer un déploiement automatique lors de nouveaux pushs sur la branche liée.
+# - Assurez-vous de monter un disque persistant pour `/app/sessions` afin de conserver la session WhatsApp entre déploiements.
+# - Health check: `/health` doit répondre JSON { ok: true }.
+# - Après le déploiement, vérifiez les logs pour la génération de `qr.png` et utilisez `/admin` pour scanner le QR et finaliser la connexion.
