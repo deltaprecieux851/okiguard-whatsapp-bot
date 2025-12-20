@@ -1,0 +1,7 @@
+node_modules/
+_sessions/
+sessions/
+tmp/
+.env
+.DS_Store
+qr.png
